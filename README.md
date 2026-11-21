@@ -1,2 +1,0 @@
-# ConectaSenior
-ConectaSenior, landing page.
