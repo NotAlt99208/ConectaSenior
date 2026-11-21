@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal de acompañamiento · ConectaSenior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<header>
+<nav aria-label="Principal">
+<a class="brand" href="index.html"><span class="logo">CS</span> ConectaSenior</a>
+<button id="menuBtn" class="btn2" aria-expanded="false" aria-controls="links">☰ Menú</button>
+<div id="links"><a href="index.html">Cómo funciona</a><a href="resultados.html">Resultados</a><a href="descargar.html">Descargar app</a><a href="materiales.html">Materiales para centros</a><a href="solicitar.html">Solicitar información</a><a href="portal.html" aria-current="page">Portal de acompañamiento</a></div>
+</nav>
+</header>
+<main id="main">
+<section id="prueba">
+<h1>Portal de acompañamiento</h1>
+<p class="lead">Elige un rol y prueba la experiencia. El familiar ve solo lo que el adulto mayor permite.</p>
+<div class="tabs" role="tablist" aria-label="Elige un rol">
+<button role="tab" class="tab" data-a="tab" data-m="adulto" aria-selected="true">Adulto mayor</button>
+<button role="tab" class="tab" data-a="tab" data-m="familiar" aria-selected="false">Familiar</button>
+<button role="tab" class="tab" data-a="tab" data-m="personal" aria-selected="false">Personal del centro</button>
+</div>
+<div class="grid3">
+<div class="card" id="info"></div>
+<div class="phone" id="phone" aria-live="off"></div>
+<div class="card" id="panel"></div>
+</div>
+</section>
+</main>
+<footer><p>ConectaSenior · HCI for UX Design</p></footer>
+<script src="js/main.js"></script>
+</body>
+</html>
