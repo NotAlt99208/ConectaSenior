@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Descargar app · ConectaSenior</title>
+<meta name="description" content="Descarga ConectaSenior escaneando el código QR.">
+<meta name="theme-color" content="#0B3C6F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230B3C6F%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2728%27 fill=%27white%27 text-anchor=%27middle%27%3ECS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<header>
+<nav aria-label="Principal">
+<a class="brand" href="index.html"><span class="logo" aria-hidden="true">CS</span> ConectaSenior</a>
+<button id="menuBtn" class="btn2" aria-expanded="false" aria-controls="links"><span class="material-symbols-rounded" aria-hidden="true">menu</span> Menú</button>
+<div id="links"><a href="index.html">Cómo funciona</a><a href="resultados.html">Resultados</a><a href="descargar.html" aria-current="page">Descargar app</a><a href="materiales.html">Materiales para centros</a><a href="solicitar.html">Solicitar información</a><a href="portal.html">Portal de acompañamiento</a></div>
+</nav>
+</header>
+<main id="main">
+<section id="descargar" data-hu="HU47">
+<h1>Descargar app</h1>
+<p class="lead">Escanea el código con la cámara del celular. Te lleva directo a la tienda que corresponde a tu teléfono.</p>
+<div class="grid2">
+<div class="card c"><img class="qr" src="images/qr.svg" alt="Código QR para descargar ConectaSenior" width="200" height="200"><p>Apunta la cámara al código y toca el enlace que aparece.</p><button class="btn" data-a="scan"><span class="material-symbols-rounded" aria-hidden="true">qr_code_scanner</span> Simular escaneo</button></div>
+<div class="card store"><h2>Tu tienda</h2><p id="os" role="status">Pulsa “Simular escaneo” para ver a qué tienda te llevaría el código.</p>
+<p><button class="btn2" data-a="store" data-s="play"><span class="material-symbols-rounded" aria-hidden="true">shop</span> Play Store (Android)</button> <button class="btn2" data-a="store" data-s="apple"><span class="material-symbols-rounded" aria-hidden="true">phone_iphone</span> App Store (iPhone)</button></p>
+<h3>Instálala en 3 pasos</h3>
+<ol class="pasos"><li><span class="num" aria-hidden="true">1</span><span>Escanea el código.</span></li><li><span class="num" aria-hidden="true">2</span><span>Toca “Instalar”.</span></li><li><span class="num" aria-hidden="true">3</span><span>Abre ConectaSenior y elige tu trámite.</span></li></ol>
+<p><small>¿Necesitas dejarle instrucciones a alguien? <a href="materiales.html">Imprime la guía de una página</a>.</small></p></div>
+</div>
+</section>
+</main>
+<footer><p>ConectaSenior · HCI for UX Design (1ASI0784) · UPC 2026-20</p><p>Demo académica: los datos son de ejemplo y se guardan solo en tu navegador.</p></footer>
+<script src="js/main.js"></script>
+</body>
+</html>

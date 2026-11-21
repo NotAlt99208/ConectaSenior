@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Materiales para centros · ConectaSenior</title>
+<meta name="description" content="Guía impresa de una página con letra grande para adultos mayores.">
+<meta name="theme-color" content="#0B3C6F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230B3C6F%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2728%27 fill=%27white%27 text-anchor=%27middle%27%3ECS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<header>
+<nav aria-label="Principal">
+<a class="brand" href="index.html"><span class="logo" aria-hidden="true">CS</span> ConectaSenior</a>
+<button id="menuBtn" class="btn2" aria-expanded="false" aria-controls="links"><span class="material-symbols-rounded" aria-hidden="true">menu</span> Menú</button>
+<div id="links"><a href="index.html">Cómo funciona</a><a href="resultados.html">Resultados</a><a href="descargar.html">Descargar app</a><a href="materiales.html" aria-current="page">Materiales para centros</a><a href="solicitar.html">Solicitar información</a><a href="portal.html">Portal de acompañamiento</a></div>
+</nav>
+</header>
+<main id="main">
+<section id="materiales" data-hu="HU48">
+<h1>Materiales para centros</h1>
+<p class="lead">Guía de una página con letra grande para entregar al adulto mayor. Se imprime en una hoja A4.</p>
+<button class="btn auto noprint" onclick="window.print()"><span class="material-symbols-rounded" aria-hidden="true">print</span> Imprimir guía de una página</button>
+<article class="guia" aria-labelledby="guia-t">
+<h2 id="guia-t">Pide una cita desde tu celular</h2>
+<ol class="pasos">
+<li><span class="num" aria-hidden="true">1</span><span><b><span class="material-symbols-rounded" aria-hidden="true">smartphone</span> Abre la aplicación.</b><br>Toca el ícono de ConectaSenior.</span></li>
+<li><span class="num" aria-hidden="true">2</span><span><b><span class="material-symbols-rounded" aria-hidden="true">calendar_month</span> Elige “Solicitar una cita”.</b><br>Está en la pantalla de inicio.</span></li>
+<li><span class="num" aria-hidden="true">3</span><span><b><span class="material-symbols-rounded" aria-hidden="true">volume_up</span> Sigue los pasos.</b><br>Lee o toca “Escuchar” para oír cada instrucción.</span></li>
+<li><span class="num" aria-hidden="true">4</span><span><b><span class="material-symbols-rounded" aria-hidden="true">check_circle</span> Confirma tu cita.</b><br>Revisa tus datos y toca el botón verde.</span></li>
+</ol>
+<div class="gq"><img class="qr sm" src="images/qr.svg" alt="Código QR para descargar ConectaSenior" width="120" height="120"><p><b>¿Aún no tienes la app?</b> Escanea este código con la cámara de tu celular.<br>¿Necesitas ayuda? Llama al <b>900 123 456</b>.</p></div>
+</article>
+</section>
+</main>
+<footer><p>ConectaSenior · HCI for UX Design (1ASI0784) · UPC 2026-20</p><p>Demo académica: los datos son de ejemplo y se guardan solo en tu navegador.</p></footer>
+<script src="js/main.js"></script>
+</body>
+</html>
