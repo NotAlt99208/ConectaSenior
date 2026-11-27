@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cómo funciona · ConectaSenior</title>
-<meta name="description" content="Demo de ConectaSenior: trámites paso a paso para adultos mayores, con acompañamiento familiar opcional.">
+<meta name="description" content="Demo de ConectaSenior: trámites paso a paso para adultos mayores, con acompañamiento familiar opcional e interfaces Human-AI.">
 <meta name="theme-color" content="#0B3C6F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230B3C6F%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2728%27 fill=%27white%27 text-anchor=%27middle%27%3ECS%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,8 +25,17 @@
 </header>
 <main id="main">
 <section id="como" data-hu="HU44">
+<span class="hai-badge"><span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span> Versión mejorada con Human-AI Interaction</span>
 <h1>Tu trámite, paso a paso</h1>
-<p class="lead">ConectaSenior ayuda a las personas mayores a hacer sus trámites por sí mismas: una acción por pantalla, letra grande y voz. Mira cómo se pide una cita en menos de 2 minutos. No necesitas registrarte.</p>
+<p class="lead">ConectaSenior ayuda a las personas mayores a hacer sus trámites por sí mismas: una acción por pantalla, asistente contextual, lectura por voz y escaneo inteligente de documentos.</p>
+
+<!-- Mejora 1 (Juaquin Aldazabal): Selector de 3 roles grandes desde el inicio -->
+<div class="hai-roles" role="group" aria-label="Selecciona tu perfil para empezar">
+  <button class="hai-role-btn" data-a="pickrole" data-m="adulto"><span><span class="material-symbols-rounded" aria-hidden="true">elderly</span> Soy Adulto Mayor</span><small>Hacer mis trámites con ayuda por voz</small></button>
+  <button class="hai-role-btn" data-a="pickrole" data-m="familiar"><span><span class="material-symbols-rounded" aria-hidden="true">group</span> Soy Familiar / Cuidador</span><small>Vincular con QR y recibir avisos</small></button>
+  <button class="hai-role-btn" data-a="pickrole" data-m="personal"><span><span class="material-symbols-rounded" aria-hidden="true">support_agent</span> Personal de Centro</span><small>Modo asistido con frases guía</small></button>
+</div>
+
 <div class="grid2">
 <div class="player" role="region" aria-label="Demo con subtítulos">
 <div class="screen"><span id="scr-ico" class="material-symbols-rounded ico-xl" aria-hidden="true">play_circle</span><p id="cap">Pulsa Reproducir para comenzar.</p></div>
@@ -34,21 +43,21 @@
 </div>
 <div class="card"><h2>Conoce ConectaSenior sin registrarte</h2>
 <ul class="ck"><li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span> Duración: 1 min 48 s</li><li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span> Subtítulos visibles</li><li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span> Puedes pausar cuando quieras</li></ul>
-<a class="btn" href="#prueba"><span class="material-symbols-rounded" aria-hidden="true">touch_app</span> Probar la app</a>
+<a class="btn" href="#prueba"><span class="material-symbols-rounded" aria-hidden="true">touch_app</span> Probar la app mejorada</a>
 <p id="end" hidden>¿Te gustaría usarla en tu centro? <a class="btn" href="solicitar.html"><span class="material-symbols-rounded" aria-hidden="true">mail</span> Solicitar información o capacitación</a></p></div>
 </div>
 </section>
 <section id="para" aria-labelledby="para-t">
 <h2 id="para-t">Pensado para tres personas</h2>
 <div class="grid3">
-<div class="card"><span class="material-symbols-rounded ico-xl" aria-hidden="true" style="color:var(--azul)">elderly</span><h3>Adulto mayor</h3><p>Hace sus trámites solo, con pasos cortos, voz y la opción de corregir sin miedo.</p></div>
-<div class="card"><span class="material-symbols-rounded ico-xl" aria-hidden="true" style="color:var(--azul)">group</span><h3>Familiar o cuidador</h3><p>Recibe avisos y ve el avance, solo con el permiso del adulto mayor.</p><a class="btn2" href="portal.html"><span class="material-symbols-rounded" aria-hidden="true">login</span> Portal de acompañamiento</a></div>
+<div class="card"><span class="material-symbols-rounded ico-xl" aria-hidden="true" style="color:var(--azul)">elderly</span><h3>Adulto mayor</h3><p>Hace sus trámites solo, con pasos cortos, asistente inteligente, voz y la opción de corregir sin miedo.</p></div>
+<div class="card"><span class="material-symbols-rounded ico-xl" aria-hidden="true" style="color:var(--azul)">group</span><h3>Familiar o cuidador</h3><p>Se vincula mediante QR o código de un uso y ve el avance, solo con el permiso del adulto mayor.</p><a class="btn2" href="portal.html"><span class="material-symbols-rounded" aria-hidden="true">login</span> Portal de acompañamiento</a></div>
 <div class="card"><span class="material-symbols-rounded ico-xl" aria-hidden="true" style="color:var(--azul)">support_agent</span><h3>Personal del centro</h3><p>Guía con el modo asistido, sin tomar el control del celular.</p><a class="btn2" href="materiales.html"><span class="material-symbols-rounded" aria-hidden="true">description</span> Materiales para centros</a></div>
 </div>
 </section>
 <section id="prueba" aria-labelledby="prueba-t">
 <h2 id="prueba-t">Prueba la app</h2>
-<p class="lead">Elige un rol y prueba la experiencia. El familiar solo ve lo que el adulto mayor permite.</p>
+<p class="lead">Elige un rol y prueba la experiencia con interfaces Human-AI. El familiar solo ve lo que el adulto mayor permite.</p>
 <div class="tabs" role="tablist" aria-label="Elige un rol">
 <button role="tab" class="tab" id="tab-adulto" data-a="tab" data-m="adulto" aria-selected="true" aria-controls="demo-grid" tabindex="0"><span class="material-symbols-rounded" aria-hidden="true">elderly</span> Adulto mayor</button>
 <button role="tab" class="tab" id="tab-familiar" data-a="tab" data-m="familiar" aria-selected="false" aria-controls="demo-grid" tabindex="-1"><span class="material-symbols-rounded" aria-hidden="true">group</span> Familiar</button>
