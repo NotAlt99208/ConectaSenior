@@ -1,7 +1,6 @@
 /* =========================================================
-   ConectaSenior · Landing Page · Interacciones
-   Cada bloque indica las Historias de Usuario (HU) que implementa.
-   Los datos son simulados y se guardan solo en este navegador.
+   ConectaSenior · Landing Page · Interacciones + Mejoras HAI (S14)
+   Cada bloque indica las Historias de Usuario (HU) y Principios HAI.
    ========================================================= */
 'use strict';
 
@@ -33,11 +32,9 @@ if (menuBtn) menuBtn.addEventListener('click', () => {
   const abierto = Q('#links').classList.toggle('open');
   menuBtn.setAttribute('aria-expanded', abierto);
 });
-
-// Cierra el menú móvil al elegir una sección
 QA('#links a').forEach(a => a.addEventListener('click', () => { Q('#links').classList.remove('open'); if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false'); }));
 
-/* ---------- Pestañas accesibles con teclado (flechas, Inicio, Fin) ---------- */
+/* ---------- Pestañas accesibles con teclado ---------- */
 document.addEventListener('keydown', e => {
   const t = e.target.closest('[role=tab]');
   if (!t) return;
@@ -52,23 +49,29 @@ document.addEventListener('keydown', e => {
 });
 
 /* =========================================================
-   DATOS DE EJEMPLO
+   DATOS DE EJEMPLO + BASE DE CONOCIMIENTO ASISTENTE HAI
    ========================================================= */
 const STEPS = [
-  { t: 'Elige el centro de salud', k: 'centro', o: ['Centro Norte', 'Centro Sur', 'Centro Lima'] },
-  { t: 'Elige la fecha de tu cita', k: 'fecha', ex: 'Toca el campo y elige un día en el calendario.' },
-  { t: 'Escribe tu número de documento', k: 'doc', ex: 'Ejemplo: 12345678 (8 números, sin espacios)' }
+  { t: 'Elige el centro de salud', k: 'centro', o: ['Centro Norte', 'Centro Sur', 'Centro Lima'],
+    aiQue: 'Toca el botón con el nombre del centro médico más cercano a tu casa.',
+    aiEj: 'Ejemplo: Si vives en Independencia o Los Olivos, elige "Centro Norte".' },
+  { t: 'Elige la fecha de tu cita', k: 'fecha', ex: 'Toca el campo y elige un día en el calendario.',
+    aiQue: 'Toca el recuadro de fecha y selecciona un día disponible a partir de hoy.',
+    aiEj: 'Ejemplo: Elige mañana o cualquier día de la próxima semana.' },
+  { t: 'Escribe tu número de documento', k: 'doc', ex: 'Ejemplo: 12345678 (8 números, sin espacios)',
+    aiQue: 'Ingresa los 8 números de tu DNI o usa la cámara para leerlo automáticamente.',
+    aiEj: 'Ejemplo: 10458921 (sin letras ni espacios).' }
 ];
 const ACC = [
-  ['calendar_month', 'Solicitar una cita'],
-  ['local_hospital', 'Consultar mi cita'],
-  ['receipt_long', 'Pagar un recibo'],
-  ['payments', 'Consultar mi pensión']
+  ['calendar_month', 'Solicitar una cita', 'Más usado por ti'],
+  ['local_hospital', 'Consultar mi cita', 'Revisa tus reservas'],
+  ['receipt_long', 'Pagar un recibo', 'Luz o agua sin colas'],
+  ['payments', 'Consultar mi pensión', 'Cronograma vigente']
 ];
 const FRASES = [
   'Pídale que elija el centro de salud que le queda más cerca.',
   'Pídale que toque la fecha en el calendario.',
-  'Dígale que escriba su documento sin espacios.',
+  'Dígale que escriba su documento o use el botón de cámara.',
   'Pídale que revise sus datos y toque el botón verde.'
 ];
 const ESTADO = { 'Completado': ['check_circle', 'p-ok'], 'Pendiente': ['schedule', 'p-pe'], 'Falló': ['error', 'p-er'] };
@@ -80,10 +83,9 @@ const BASE = () => [
 const VENC = [['Pago de recibo de agua', 2], ['Renovación de DNI', 6], ['Cita de control en Centro Norte', 9]];
 const PERMS = { i: ['Itinerario y vencimientos', 'Fechas y estados de sus trámites'], n: ['Avisos de trámites', 'Completados y pendientes'], f: ['Intentos fallidos', 'Para ofrecer ayuda a tiempo'] };
 
-/* ---------- Bloques reutilizables del familiar (HU28 a HU33, HU36) ---------- */
 const pill = e => `<span class="pill ${ESTADO[e][1]}">${I(ESTADO[e][0])} ${e}</span>`;
 
-function listaAvisos() { // HU28, HU29, HU30
+function listaAvisos() {
   if (!S.access) return [];
   const A = [];
   if (S.perms.n) S.notes.slice().reverse().forEach(t => A.push(['ok', 'check_circle', t]));
@@ -95,18 +97,18 @@ const htmlAvisos = (max = 99) => {
   const A = listaAvisos().slice(0, max);
   return A.length ? A.map(a => `<div class="aviso ${a[0]}">${I(a[1])}<span>${esc(a[2])}</span></div>`).join('') : '<p class="note2">No tienes avisos con los permisos actuales.</p>';
 };
-function htmlItinerario() { // HU31, HU33
+function htmlItinerario() {
   if (!S.perms.i) return `<p class="warn">${I('visibility_off')} Carmen no comparte su itinerario contigo.</p>`;
   const L = BASE().concat(S.done.map(d => [d.n, 'Completado', d.d]));
   return L.map(x => `<div class="row"><b>${esc(x[0])}</b> ${pill(x[1])}<br><small>${esc(x[2])} · ${I('lock')} Documento: oculto por privacidad</small></div>`).join('')
     + `<p><small>${I('visibility')} Solo lectura: no puedes cambiar estos trámites.</small></p>`;
 }
-function htmlVencimientos() { // HU32
+function htmlVencimientos() {
   if (!S.perms.i) return `<p class="warn">${I('visibility_off')} Carmen no comparte sus vencimientos contigo.</p>`;
   return VENC.map(v => `<div class="row"><b>${v[0]}</b> <span class="pill p-pe">${I('event')} Vence en ${v[1]} días</span><br><small>${fechaRel(v[1])}</small></div>`).join('')
     + '<p><small>Recuérdaselos con tiempo. Tú no puedes realizar estos trámites por ella.</small></p>';
 }
-function htmlPermisos() { // HU36
+function htmlPermisos() {
   return Object.keys(PERMS).map(k => {
     const si = S.access && S.perms[k];
     return `<div class="aviso ${si ? 'ok' : ''}">${I(si ? 'visibility' : 'visibility_off')}<span><b>${PERMS[k][0]}: ${si ? 'Puedes ver' : 'No puedes ver'}</b><br><small>${PERMS[k][1]}</small></span></div>`;
@@ -122,10 +124,10 @@ const CAP = [
   [10, 'home', 'En la pantalla de inicio, toca “Solicitar una cita”.'],
   [25, 'local_hospital', 'Elige el centro de salud que te queda más cerca.'],
   [40, 'calendar_month', 'Elige la fecha en el calendario.'],
-  [55, 'badge', 'Escribe tu documento. Si te equivocas, te explicamos cómo corregirlo.'],
-  [70, 'volume_up', 'Toca “Escuchar” para oír cada instrucción.'],
+  [55, 'badge', 'Escanea tu DNI o escríbelo sin miedo a equivocarte.'],
+  [70, 'volume_up', 'Toca “Escuchar” o usa tu voz para avanzar.'],
   [85, 'check_circle', 'Revisa el resumen y confirma. La decisión es siempre tuya.'],
-  [100, 'group', 'Tu familia puede acompañarte, solo si tú lo permites.']
+  [100, 'group', 'Tu familia puede acompañarte con QR, solo si tú lo permites.']
 ];
 const DUR = 108;
 let t = 0, iv = null, sub = true;
@@ -160,47 +162,84 @@ if (Q('#pp')) {
 }
 
 /* =========================================================
-   CÓMO FUNCIONA · Prueba la app con tres roles
-   Adulto mayor: HU01-HU07, HU14, HU15, HU17, HU18, HU20, HU21, HU24, HU25
-   Familiar: HU28, HU31, HU33-HU36, HU38 · Personal del centro: HU41-HU43
+   PRUEBA LA APP · CON MEJORAS HUMAN-AI INTERACTION (SEMANA 14)
    ========================================================= */
 let mode = 'adulto', view = 'home', quit = false, said = '', enfocar = false;
 
 const banner = () => mode === 'personal' ? `<div class="ban">${I('visibility')} MODO ASISTIDO</div>` : '';
 
-function vHome() { // HU25, HU26, HU27, HU07
+/* Mejora 1 (Juaquin Aldazabal): Recomendaciones personalizadas con transparencia HAI */
+function vHome() {
   const orden = ACC.slice().sort((a, b) => (S.uses[b[1]] || 0) - (S.uses[a[1]] || 0));
   said = '¿Qué necesitas hacer? Elige un trámite.';
   return `<p class="hi">Buenos días, Carmen</p><h3 tabindex="-1">¿Qué necesitas hacer?</h3>`
+    + `<p><small>${I('auto_awesome')} Ordenado según tus trámites frecuentes (tú tienes el control).</small></p>`
     + (S.step > 0 ? `<div class="pend"><b>${I('schedule')} Solicitar una cita</b><p>Quedaste en el paso ${S.step} de 4</p><button class="btn" data-a="resume">${I('arrow_forward')} Continuar donde lo dejé</button></div>` : '')
-    + `<div class="acc">` + orden.map(a => `<button class="ac" data-a="acc" data-n="${a[1]}">${I(a[0])}${a[1]}</button>`).join('') + '</div>';
+    + `<div class="acc">` + orden.map(a => {
+      const usos = S.uses[a[1]] || 0;
+      const motivo = usos > 0 ? `Usado ${usos} ${usos === 1 ? 'vez' : 'veces'}` : a[2];
+      return `<button class="ac" data-a="acc" data-n="${a[1]}">${I(a[0])}<span>${a[1]}</span><span class="hai-why">★ ${motivo}</span></button>`;
+    }).join('') + '</div>';
 }
 
-function vPaso(n) { // HU01, HU02, HU06, HU20, HU21, HU24
+/* Mejoras 3, 4, 5 y 6: Voz multimodal + Asistente contextual + OCR + Deshacer */
+function vPaso(n) {
   const s = STEPS[n - 1], d = S.data;
   said = s.t + '. ' + (s.ex || '');
   let f = '';
-  if (s.o) f = `<div class="opts" role="group" aria-label="${s.t}">` + s.o.map(o => `<button class="opt" data-a="opt" data-v="${o}" aria-pressed="${d.centro === o}">${I('local_hospital')} ${o}</button>`).join('') + '</div>';
-  else if (s.k === 'fecha') f = `<label for="f">Fecha de la cita</label><input id="f" type="date" min="${isoHoy()}" value="${d.fecha || ''}" aria-describedby="fh err"><small id="fh" class="hint">${s.ex}</small>`;
-  else f = `<label for="f">Número de documento</label><input id="f" inputmode="numeric" maxlength="8" autocomplete="off" value="${d.doc || ''}" aria-describedby="fh err"><small id="fh" class="hint">${s.ex}</small><small class="hint">Llevas <b id="cnt">${(d.doc || '').length} de 8</b> números</small><button class="btn2" data-a="clr">${I('backspace')} Borrar dato</button>`;
+  if (s.o) {
+    f = `<div class="opts" role="group" aria-label="${s.t}">` + s.o.map(o => `<button class="opt" data-a="opt" data-v="${o}" aria-pressed="${d.centro === o}">${I('local_hospital')} ${o}</button>`).join('') + '</div>';
+  } else if (s.k === 'fecha') {
+    f = `<label for="f">Fecha de la cita</label><input id="f" type="date" min="${isoHoy()}" value="${d.fecha || ''}" aria-describedby="fh err"><small id="fh" class="hint">${s.ex}</small>`;
+  } else {
+    /* Mejora 5 (Daniel Bernuy): Reconocimiento óptico OCR para DNI */
+    f = `<div class="ocr-box">
+          <button type="button" class="btn2" data-a="ocr" style="width:100%;margin:0">${I('photo_camera')} Escanear DNI con cámara (IA)</button>
+          <div id="ocr-res" hidden></div>
+         </div>
+         <label for="f">Número de documento (o corrígelo aquí)</label>
+         <input id="f" inputmode="numeric" maxlength="8" autocomplete="off" value="${d.doc || ''}" aria-describedby="fh err">
+         <small id="fh" class="hint">${s.ex}</small>
+         <small class="hint">Llevas <b id="cnt">${(d.doc || '').length} de 8</b> números</small>
+         <button class="btn2" data-a="clr">${I('backspace')} Borrar dato</button>`;
+  }
+
   return `<p class="st">Paso ${n} de 4</p><div class="bar" role="progressbar" aria-label="Avance del trámite" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${n}"><i style="width:${n * 25}%"></i></div>`
-    + `<h3 tabindex="-1">${s.t}</h3>`
-    + `<div class="vz"><button class="btn2" data-a="say">${I('volume_up')}Escuchar</button><button class="btn2" data-a="say">${I('replay')}Repetir</button><button class="btn2" data-a="stop">${I('stop')}Detener</button></div>`
-    + f + `<p id="err" class="err" role="alert" hidden></p><div id="undo"></div>`
+    + `<h3 id="titulo-paso" tabindex="-1">${s.t}</h3>`
+    /* Mejora 3 (Andy Ashcalla): Barra multimodal de voz + comandos de voz + onda visual */
+    + `<div class="vz">
+        <button class="btn2" data-a="say">${I('volume_up')}Escuchar</button>
+        <button class="btn2" data-a="mic">${I('mic')}Hablar</button>
+        <button class="btn2" data-a="stop">${I('stop')}Detener</button>
+       </div>`
+    + `<div id="voz-onda" class="voz-ondas" hidden><span class="ondas-bars"><i></i><i></i><i></i></span><span id="voz-txt">Leyendo instrucción en voz alta...</span></div>`
+    + f
+    + `<p id="err" class="err" role="alert" hidden></p><div id="undo"></div>`
+    /* Mejora 4 (Carlos Caceres): Asistente Conversacional Contextual */
+    + `<div class="hai-bot" role="region" aria-label="Ayudante ConectaSenior">
+        <div class="hai-bot-head">${I('smart_toy')} Ayudante ConectaSenior <small>(Guía automática)</small></div>
+        <div class="hai-chips">
+          <button type="button" class="hai-chip" data-a="bot" data-q="que">¿Qué pongo aquí?</button>
+          <button type="button" class="hai-chip" data-a="bot" data-q="ej">Dame un ejemplo</button>
+          <button type="button" class="hai-chip" data-a="bot" data-q="voz">🔊 Leer ayuda</button>
+        </div>
+        <div id="bot-out" class="hai-bot-msg">Toca un botón si tienes dudas sobre este paso.</div>
+       </div>`
     + `<div class="nav2"><button class="btn2" data-a="back">${I('arrow_back')} Volver</button><button class="btn" data-a="next">Siguiente ${I('arrow_forward')}</button></div>`;
 }
 
-function vResumen() { // HU03, HU14
+function vResumen() {
   const d = S.data;
   const r = [['Centro', d.centro], ['Fecha', fmtISO(d.fecha)], ['Documento', d.doc]];
   said = 'Revisa la información y confirma.';
   return `<p class="st">Paso 4 de 4</p><div class="bar" role="progressbar" aria-label="Avance del trámite" aria-valuemin="0" aria-valuemax="4" aria-valuenow="4"><i style="width:100%"></i></div><h3 tabindex="-1">Revisa la información</h3>`
     + r.map((x, i) => `<div class="row"><b>${x[0]}:</b> ${esc(x[1] || '—')}<br><button class="btn2" data-a="fix" data-n="${i + 1}">${I('edit')} Corregir</button></div>`).join('')
     + `<div class="nav2"><button class="btn2" data-a="back">${I('arrow_back')} Volver</button><button class="btn" data-a="send">${I('send')} Enviar</button></div>`
-    + (view === 'confirm' ? `<div class="ov" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t" tabindex="-1">¿Enviar tu solicitud?</h3><p>${esc(d.centro)}, ${fmtISO(d.fecha)}</p><p><small>Nada se envía hasta que confirmes.</small></p><button class="btn" data-a="yes">${I('check_circle')} Sí, confirmar</button><button class="btn2" data-a="no">${I('arrow_back')} No, volver</button></div>` : '');
+    /* Mejora 6 (Nicolas Mancilla): Doble confirmación con lectura en voz alta */
+    + (view === 'confirm' ? `<div class="ov" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t" tabindex="-1">¿Enviar tu solicitud?</h3><p>${esc(d.centro)}, ${fmtISO(d.fecha)}</p><p><small>${I('volume_up')} Leyendo resumen en voz alta. Nada se envía hasta que confirmes.</small></p><button class="btn" data-a="yes">${I('check_circle')} Sí, confirmar</button><button class="btn2" data-a="no">${I('arrow_back')} No, volver</button></div>` : '');
 }
 
-function vListo() { // HU04, HU43
+function vListo() {
   const x = S.last;
   said = 'Trámite completado. Tu número de constancia es ' + x.c;
   return `<div class="c"><span class="ico-xl material-symbols-rounded" aria-hidden="true" style="color:var(--verde)">check_circle</span><h3 tabindex="-1">Trámite completado</h3><p>Tu cita se solicitó correctamente.</p></div>`
@@ -209,7 +248,7 @@ function vListo() { // HU04, HU43
     + `<button class="btn2" data-a="keep" style="width:100%">${I('download')} Guardar constancia</button><button class="btn" data-a="home">${I('home')} Volver al inicio</button>`;
 }
 
-function vFamiliar() { // HU28, HU31, HU33, HU35
+function vFamiliar() {
   if (!S.access) return sinAcceso();
   return `<p class="hi">Itinerario compartido</p><h3 tabindex="-1">Trámites de Carmen</h3>` + htmlItinerario()
     + (S.perms.n && S.notes.length ? '<h3>Avisos</h3>' + S.notes.slice(-2).reverse().map(n => `<div class="aviso ok">${I('notifications')}<span>${esc(n)}</span></div>`).join('') : '')
@@ -222,27 +261,29 @@ function vFlujo() {
   return S.step === 4 ? vResumen() : vPaso(S.step);
 }
 
-function info() { // columna izquierda
+function info() {
   let h;
-  if (mode === 'adulto') h = `<h3>Qué puedes probar</h3><ul class="ck"><li>${I('check_circle')} Hacer un trámite paso a paso</li><li>${I('check_circle')} Escuchar las instrucciones</li><li>${I('check_circle')} Corregir un error</li><li>${I('check_circle')} Deshacer una acción</li><li>${I('check_circle')} Salir y retomar el trámite</li></ul><p><small>Tu avance se guarda solo en este navegador.</small></p>`;
+  if (mode === 'adulto') h = `<h3>Qué puedes probar (Mejoras HAI)</h3><ul class="ck"><li>${I('auto_awesome')} Recomendaciones transparentes</li><li>${I('mic')} Voz multimodal y comandos</li><li>${I('smart_toy')} Ayudante contextual en cada paso</li><li>${I('photo_camera')} Escaneo OCR de documento</li><li>${I('undo')} Deshacer y doble confirmación</li></ul><p><small>Tu avance se guarda solo en este navegador.</small></p>`;
   else if (mode === 'familiar') h = '<h3>Lo que puedes ver</h3>' + htmlPermisos() + `<a class="btn2" href="portal.html">${I('login')} Ir al portal del familiar</a>`;
   else h = `<h3>Asistencia respetuosa</h3><ul class="ck"><li>${I('check_circle')} Usa frases claras y breves</li><li>${I('check_circle')} Señala el siguiente paso</li><li>${I('check_circle')} Deja que él toque la pantalla</li><li>${I('check_circle')} La confirmación final es suya</li></ul>`;
   Q('#info').innerHTML = h;
 }
 
-function panel() { // columna derecha
+/* Mejora 2 (Carlos Cubas): Vinculación familiar multimodal con QR visual + guía sincronizada */
+function panel() {
   const p = Q('#panel');
   Q('#demo-grid').classList.toggle('dos', mode === 'adulto');
   p.hidden = mode === 'adulto';
   if (mode === 'adulto') { p.innerHTML = ''; return; }
-  if (mode === 'familiar') { // HU34, HU35, HU38 (simula las decisiones del adulto mayor)
+  if (mode === 'familiar') {
     p.innerHTML = `<h3>Decisiones de Carmen</h3><p><small>Simula lo que el adulto mayor permite.</small></p>`
       + Object.keys(PERMS).map(k => `<label class="sw"><span>${PERMS[k][0]}<br><span class="estado">${S.perms[k] ? 'Activado' : 'Desactivado'}</span></span><input type="checkbox" role="switch" data-p="${k}" ${S.perms[k] ? 'checked' : ''} ${S.access ? '' : 'disabled'}></label>`).join('')
       + `<button class="btn2 peligro" data-a="quit" ${S.access ? '' : 'disabled'}>${I('person_remove')} Quitar acceso</button>`
-      + `<h3 style="margin-top:24px">Vincular cuentas</h3><p><small>Sin compartir contraseñas: un código de 6 dígitos que sirve una sola vez.</small></p>`
-      + `<button class="btn2" data-a="gen">${I('qr_code_2')} Generar código</button> <b id="code" style="font-size:24px;letter-spacing:2px">${S.code || ''}</b>`
-      + `<label for="cin">Código recibido</label><input id="cin" inputmode="numeric" maxlength="6" autocomplete="off" aria-describedby="cmsg"><button class="btn" data-a="link">${I('link')} Aprobar vinculación</button><p id="cmsg" role="status"></p>`;
-  } else { // HU41, HU42, HU43
+      + `<h3 style="margin-top:24px">Vincular cuentas (Multimodal QR)</h3><p><small>Paso 1: Genera QR o código. Paso 2: Ingresa el código abajo para autorizar.</small></p>`
+      + `<button class="btn2" data-a="gen">${I('qr_code_2')} Generar QR y código</button>`
+      + (S.code ? `<div class="qr-link-box"><img src="images/qr.svg" alt="QR de vinculación" width="96" height="96"><br><small>Código de 6 dígitos:</small><br><b id="code" style="font-size:26px;letter-spacing:3px;color:var(--verde)">${S.code}</b></div>` : `<b id="code" style="font-size:24px;letter-spacing:2px"></b>`)
+      + `<label for="cin">Paso 2: Escribe aquí los 6 números</label><input id="cin" inputmode="numeric" maxlength="6" placeholder="Ej: ${S.code || '482915'}" autocomplete="off" aria-describedby="cmsg"><button class="btn" data-a="link">${I('link')} Aprobar vinculación</button><p id="cmsg" role="status"></p>`;
+  } else {
     const frase = view === 'done' ? 'Felicítelo: el trámite fue suyo.' : view === 'home' ? 'Pídale que toque “Solicitar una cita”.' : FRASES[Math.min(S.step || 1, 4) - 1];
     p.innerHTML = `<h3>Frase guía sugerida</h3><p class="note2"><b>“${frase}”</b></p>`
       + `<button class="btn2" data-a="snext">${I('arrow_forward')} Avanzar como personal</button><button class="btn2" data-a="sconf">${I('check_circle')} Confirmar como personal</button>`
@@ -260,24 +301,54 @@ function render() {
 }
 function go(n) { S.step = n; save(); enfocar = true; render(); }
 
-function revisar(n) { // HU17: mensajes en palabras simples
+function revisar(n) {
   const d = S.data;
   if (n === 1) return d.centro ? '' : 'Elige un centro de salud para continuar.';
   if (n === 2) { if (!d.fecha) return 'Falta la fecha. Toca el campo y elige un día.'; if (d.fecha < isoHoy()) return 'Esa fecha ya pasó. Elige un día desde hoy.'; return ''; }
   return /^\d{8}$/.test(d.doc || '') ? '' : `Tu documento debe tener 8 números. Escribiste ${(d.doc || '').length}. Ejemplo: 12345678.`;
 }
 
-function hablar(texto, parar) { // HU21, HU24
+/* Mejora 3 (Andy Ashcalla): Síntesis de voz con feedback visual sincronizado */
+function hablar(texto, parar) {
+  const onda = Q('#voz-onda'), tit = Q('#titulo-paso');
   if (!('speechSynthesis' in window)) { say('Tu navegador no tiene voz disponible.'); return; }
   speechSynthesis.cancel();
+  if (onda) onda.hidden = true;
+  if (tit) tit.classList.remove('leyendo-activo');
   if (parar) return;
   const u = new SpeechSynthesisUtterance(texto);
   u.lang = 'es-PE';
   u.rate = 0.9;
+  u.onstart = () => { if (onda) onda.hidden = false; if (tit) tit.classList.add('leyendo-activo'); };
+  u.onend = () => { if (onda) onda.hidden = true; if (tit) tit.classList.remove('leyendo-activo'); };
   speechSynthesis.speak(u);
 }
 
-function guardarConstancia() { // HU04
+/* Mejora 3: Reconocimiento de comandos de voz */
+function escucharComando() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const onda = Q('#voz-onda'), vtxt = Q('#voz-txt');
+  if (!SpeechRec) {
+    say('Comandos de voz disponibles: Siguiente, Repetir o Volver.');
+    if (onda && vtxt) { onda.hidden = false; vtxt.textContent = 'Di: "Siguiente", "Repetir" o "Volver"'; }
+    return;
+  }
+  const rec = new SpeechRec();
+  rec.lang = 'es-PE';
+  if (onda && vtxt) { onda.hidden = false; vtxt.textContent = 'Escuchando tu voz... Di "Siguiente", "Repetir" o "Volver"'; }
+  rec.onresult = e => {
+    const cmd = e.results[0][0].transcript.toLowerCase();
+    if (onda) onda.hidden = true;
+    if (cmd.includes('repetir')) hablar(said);
+    else if (cmd.includes('siguiente')) Q('[data-a="next"]')?.click();
+    else if (cmd.includes('volver')) Q('[data-a="back"]')?.click();
+    else { say('No entendí el comando. Intenta decir Siguiente, Repetir o Volver.'); alert(`Escuché "${cmd}". Di: Siguiente, Repetir o Volver.`); }
+  };
+  rec.onerror = () => { if (onda) onda.hidden = true; };
+  rec.start();
+}
+
+function guardarConstancia() {
   const x = S.last;
   const txt = `ConectaSenior · Constancia de trámite\n\nTrámite: Solicitar una cita\nCentro: ${x.centro}\nFecha de la cita: ${x.fecha}\nNúmero de constancia: ${x.c}\n` + (x.as ? 'Completado con acompañamiento del personal del centro\n' : '');
   const a = document.createElement('a');
@@ -288,10 +359,7 @@ function guardarConstancia() { // HU04
 }
 
 /* =========================================================
-   PORTAL DE ACOMPAÑAMIENTO (Arquitectura web 4.2.1)
-   Crear cuenta / Iniciar sesión → Panel: Avisos, Itinerario,
-   Próximos vencimientos, Lo que puedes ver, Mi perfil
-   HU28, HU29, HU30, HU31, HU32, HU33, HU36
+   PORTAL DE ACOMPAÑAMIENTO
    ========================================================= */
 let authView = 'login', pview = 'avisos';
 
@@ -343,7 +411,7 @@ function renderPortal(foco) {
   if (foco) { const h = Q(foco, root); if (h) h.focus(); }
 }
 
-function validar(campos) { // campos: [id, mensaje, prueba]
+function validar(campos) {
   let primero = null;
   campos.forEach(([id, msg, ok]) => {
     const f = Q('#' + id), e = Q('#e-' + id), bien = ok(f.value.trim());
@@ -366,6 +434,16 @@ document.addEventListener('click', e => {
   if (b.tagName === 'A' && b.getAttribute('href') === '#') e.preventDefault();
 
   switch (a) {
+    /* ----- Selector directo de roles desde el inicio (Mejora 1) ----- */
+    case 'pickrole': {
+      mode = b.dataset.m; view = 'home'; quit = false;
+      QA('#prueba [role=tab]').forEach(x => { const s = x.dataset.m === mode; x.setAttribute('aria-selected', s); x.tabIndex = s ? 0 : -1; });
+      render();
+      Q('#prueba')?.scrollIntoView({ behavior: 'smooth' });
+      say('Rol seleccionado: ' + mode);
+      break;
+    }
+
     /* ----- Demo de roles ----- */
     case 'tab':
       mode = b.dataset.m; view = 'home'; quit = false;
@@ -375,23 +453,53 @@ document.addEventListener('click', e => {
     case 'acc':
       S.uses[b.dataset.n] = (S.uses[b.dataset.n] || 0) + 1; save();
       if (b.dataset.n === 'Solicitar una cita') { view = 'step'; go(S.step || 1); }
-      else say('Este trámite no está disponible en la demo. Prueba “Solicitar una cita”.');
+      else { render(); say('Preferencia registrada. Prueba “Solicitar una cita” para ver el flujo completo.'); }
       break;
     case 'resume': view = 'step'; go(S.step); break;
     case 'opt': S.data.centro = b.dataset.v; save(); render(); Q(`[data-v="${b.dataset.v}"]`).focus(); break;
     case 'say': hablar(said); break;
+    case 'mic': escucharComando(); break;
     case 'stop': hablar('', true); break;
-    case 'clr': // HU15
+
+    /* ----- Asistente Conversacional Contextual (Mejora 4) ----- */
+    case 'bot': {
+      const s = STEPS[S.step - 1], out = Q('#bot-out');
+      if (!s || !out) break;
+      const msg = b.dataset.q === 'ej' ? s.aiEj : s.aiQue;
+      out.textContent = msg;
+      if (b.dataset.q === 'voz') hablar(msg);
+      say(msg);
+      break;
+    }
+
+    /* ----- Escaneo OCR simulado (Mejora 5) ----- */
+    case 'ocr': {
+      S.prev = S.data.doc || '';
+      S.data.doc = '10458921'; save();
+      const inp = Q('#f'), cnt = Q('#cnt'), res = Q('#ocr-res');
+      if (inp) inp.value = '10458921';
+      if (cnt) cnt.textContent = '8 de 8';
+      if (res) {
+        res.hidden = false;
+        res.className = 'ocr-ok';
+        res.innerHTML = '✅ DNI leído con 97 % de precisión: <b>10458921</b>. Revísalo abajo.';
+      }
+      Q('#undo').innerHTML = `<div class="undo"><span>DNI autocompletado por cámara</span><button class="btn2" data-a="undo">${I('undo')} Deshacer</button></div>`;
+      say('Documento 10458921 completado automáticamente.');
+      break;
+    }
+
+    case 'clr':
       S.prev = S.data.doc; S.data.doc = ''; save(); Q('#f').value = ''; Q('#cnt').textContent = '0 de 8';
       Q('#undo').innerHTML = `<div class="undo"><span>Dato borrado</span><button class="btn2" data-a="undo">${I('undo')} Deshacer</button></div>`;
       say('Dato borrado. Puedes deshacer.'); break;
     case 'undo':
       S.data.doc = S.prev || ''; save(); Q('#f').value = S.data.doc; Q('#cnt').textContent = S.data.doc.length + ' de 8';
       Q('#undo').innerHTML = ''; Q('#f').focus(); say('Dato restaurado.'); break;
-    case 'back': // HU06: conserva lo escrito
+    case 'back':
       if (view === 'step' && S.step > 1) go(S.step - 1); else { view = 'home'; enfocar = true; render(); }
       break;
-    case 'next': { // HU17, HU18
+    case 'next': {
       const m = revisar(S.step);
       if (!m) { go(S.step + 1); break; }
       const r = Q('#err'); r.hidden = false; r.textContent = m;
@@ -401,9 +509,13 @@ document.addEventListener('click', e => {
       break;
     }
     case 'fix': view = 'step'; go(+b.dataset.n); break;
-    case 'send': view = 'confirm'; enfocar = true; render(); break;
-    case 'no': view = 'step'; enfocar = true; render(); break;
-    case 'yes': { // HU14, HU28
+    case 'send':
+      view = 'confirm'; enfocar = true; render();
+      hablar(`Vas a confirmar tu cita en ${S.data.centro} para el ${fmtISO(S.data.fecha)}. Presiona Sí, confirmar para terminar.`);
+      break;
+    case 'no': hablar('', true); view = 'step'; enfocar = true; render(); break;
+    case 'yes': {
+      hablar('', true);
       const d = S.data, c = 'CS-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000), h = new Date().toTimeString().slice(0, 5);
       S.last = { c, as: mode === 'personal', centro: d.centro, fecha: fmtISO(d.fecha) };
       S.done.push({ n: 'Solicitar una cita', d: fmtISO(d.fecha) });
@@ -417,9 +529,9 @@ document.addEventListener('click', e => {
     case 'quit': quit = true; enfocar = true; render(); break;
     case 'qno': quit = false; render(); break;
     case 'qyes': S.access = 0; quit = false; save(); render(); say('Acceso quitado. El familiar ya no ve tu información.'); break;
-    case 'gen': { // HU38
+    case 'gen': {
       const c = String(Math.floor(100000 + Math.random() * 900000));
-      S.codes[c] = 0; S.code = c; save(); Q('#code').textContent = c; say('Código generado: ' + c.split('').join(' '));
+      S.codes[c] = 0; S.code = c; save(); panel(); say('Código y QR generados: ' + c.split('').join(' '));
       break;
     }
     case 'link': {
@@ -469,7 +581,7 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('input', e => {
-  if (e.target.id === 'f' && Q('#phone')) { // HU20: ayuda con el formato
+  if (e.target.id === 'f' && Q('#phone')) {
     const s = STEPS[S.step - 1];
     if (s.k === 'doc') { e.target.value = e.target.value.replace(/\D/g, ''); Q('#cnt').textContent = e.target.value.length + ' de 8'; }
     S.data[s.k] = e.target.value; save();
@@ -478,7 +590,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'cin') e.target.value = e.target.value.replace(/\D/g, '');
 });
 
-document.addEventListener('change', e => { // HU34: efecto inmediato
+document.addEventListener('change', e => {
   const k = e.target.dataset.p;
   if (!k) return;
   S.perms[k] = e.target.checked ? 1 : 0; save(); render();
@@ -489,7 +601,7 @@ document.addEventListener('change', e => { // HU34: efecto inmediato
 document.addEventListener('submit', e => {
   e.preventDefault();
   const id = e.target.id;
-  if (id === 'frm') { // HU45
+  if (id === 'frm') {
     const ok = validar([
       ['n', 'Escribe tu nombre.', v => v.length > 1],
       ['c', 'Escribe el nombre de tu centro.', v => v.length > 1],
@@ -527,7 +639,6 @@ document.addEventListener('submit', e => {
   }
 });
 
-/* ---------- Inicio por página ---------- */
 if (Q('#phone')) render();
 if (Q('#portal')) renderPortal();
-if (Q('#os') && /qr=1/.test(location.search)) Q('[data-a=scan]').click(); // al escanear el QR real
+if (Q('#os') && /qr=1/.test(location.search)) Q('[data-a=scan]').click();
