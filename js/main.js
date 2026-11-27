@@ -1,6 +1,6 @@
 /* =========================================================
    ConectaSenior · Landing Page · Interacciones + Mejoras HAI (S14)
-   Cada bloque indica las Historias de Usuario (HU) y Principios HAI.
+   Los 4 trámites son funcionales para la demostración en vivo.
    ========================================================= */
 'use strict';
 
@@ -16,14 +16,13 @@ const fmtISO = iso => { if (!iso) return '—'; const [y, m, d] = iso.split('-')
 const isoHoy = () => new Date(HOY.getTime() - HOY.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* ---------- Estado compartido entre páginas (HU05: guardado automático) ---------- */
-const DEF = () => ({ step: 0, data: {}, uses: {}, done: [], notes: [], perms: { n: 1, i: 1, f: 1 }, access: 1, codes: {}, user: null, logged: 0 });
+/* ---------- Estado compartido ---------- */
+const DEF = () => ({ flow: 'cita', step: 0, data: {}, uses: {}, done: [], notes: [], perms: { n: 1, i: 1, f: 1 }, access: 1, codes: {}, user: null, logged: 0 });
 let S;
 try { S = JSON.parse(localStorage.getItem('cs2')); } catch (e) { S = null; }
 S = Object.assign(DEF(), S || {});
 const save = () => { try { localStorage.setItem('cs2', JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } };
 
-/* Región viva para lectores de pantalla */
 const say = m => { const l = Q('#live'); if (!l) return; l.textContent = ''; setTimeout(() => { l.textContent = m; }, 60); };
 
 /* ---------- Menú responsive ---------- */
@@ -34,7 +33,7 @@ if (menuBtn) menuBtn.addEventListener('click', () => {
 });
 QA('#links a').forEach(a => a.addEventListener('click', () => { Q('#links').classList.remove('open'); if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false'); }));
 
-/* ---------- Pestañas accesibles con teclado ---------- */
+/* ---------- Pestañas accesibles ---------- */
 document.addEventListener('keydown', e => {
   const t = e.target.closest('[role=tab]');
   if (!t) return;
@@ -49,29 +48,49 @@ document.addEventListener('keydown', e => {
 });
 
 /* =========================================================
-   DATOS DE EJEMPLO + BASE DE CONOCIMIENTO ASISTENTE HAI
+   FLUJOS DE TRÁMITES (CITA Y RECIBO) + ASISTENTE HAI
    ========================================================= */
-const STEPS = [
-  { t: 'Elige el centro de salud', k: 'centro', o: ['Centro Norte', 'Centro Sur', 'Centro Lima'],
-    aiQue: 'Toca el botón con el nombre del centro médico más cercano a tu casa.',
-    aiEj: 'Ejemplo: Si vives en Independencia o Los Olivos, elige "Centro Norte".' },
-  { t: 'Elige la fecha de tu cita', k: 'fecha', ex: 'Toca el campo y elige un día en el calendario.',
-    aiQue: 'Toca el recuadro de fecha y selecciona un día disponible a partir de hoy.',
-    aiEj: 'Ejemplo: Elige mañana o cualquier día de la próxima semana.' },
-  { t: 'Escribe tu número de documento', k: 'doc', ex: 'Ejemplo: 12345678 (8 números, sin espacios)',
-    aiQue: 'Ingresa los 8 números de tu DNI o usa la cámara para leerlo automáticamente.',
-    aiEj: 'Ejemplo: 10458921 (sin letras ni espacios).' }
-];
+const FLOWS = {
+  cita: {
+    titulo: 'Solicitar una cita',
+    steps: [
+      { t: 'Elige el centro de salud', k: 'centro', o: ['Centro Norte', 'Centro Sur', 'Centro Lima'],
+        aiQue: 'Toca el botón con el nombre del centro médico más cercano a tu casa.',
+        aiEj: 'Ejemplo: Si vives en Lima Norte, elige "Centro Norte".' },
+      { t: 'Elige la fecha de tu cita', k: 'fecha', ex: 'Toca el campo y elige un día en el calendario.',
+        aiQue: 'Toca el recuadro de fecha y selecciona un día disponible a partir de hoy.',
+        aiEj: 'Ejemplo: Elige mañana o cualquier día de la próxima semana.' },
+      { t: 'Escribe tu número de documento', k: 'doc', ex: 'Ejemplo: 12345678 (8 números, sin espacios)',
+        aiQue: 'Ingresa los 8 números de tu DNI o usa la cámara para leerlo automáticamente.',
+        aiEj: 'Ejemplo: 10458921 (sin letras ni espacios).' }
+    ]
+  },
+  recibo: {
+    titulo: 'Pagar un recibo',
+    steps: [
+      { t: 'Elige el servicio a pagar', k: 'servicio', o: ['Recibo de Luz (Enel)', 'Recibo de Agua (Sedapal)', 'Teléfono / Internet'],
+        aiQue: 'Selecciona cuál de tus servicios mensuales deseas pagar hoy.',
+        aiEj: 'Ejemplo: Toca "Recibo de Luz (Enel)".' },
+      { t: 'Ingresa tu código de suministro', k: 'doc', ex: 'Son 8 números que aparecen arriba en tu recibo.',
+        aiQue: 'Puedes tomar foto a tu recibo con el botón azul o escribir los 8 números.',
+        aiEj: 'Ejemplo: 10458921 (sin guiones ni espacios).' },
+      { t: 'Verifica el monto a pagar (S/)', k: 'monto', ex: 'Monto detectado del mes: S/ 85.50. Puedes editarlo si deseas.',
+        aiQue: 'Revisa que el monto coincida con tu recibo físico. Si lo cambias, puedes usar Deshacer.',
+        aiEj: 'Ejemplo: 85.50 (puedes tocar Deshacer si te equivocas al borrar).' }
+    ]
+  }
+};
+
 const ACC = [
   ['calendar_month', 'Solicitar una cita', 'Más usado por ti'],
-  ['local_hospital', 'Consultar mi cita', 'Revisa tus reservas'],
   ['receipt_long', 'Pagar un recibo', 'Luz o agua sin colas'],
+  ['local_hospital', 'Consultar mi cita', 'Revisa tus reservas'],
   ['payments', 'Consultar mi pensión', 'Cronograma vigente']
 ];
 const FRASES = [
-  'Pídale que elija el centro de salud que le queda más cerca.',
-  'Pídale que toque la fecha en el calendario.',
-  'Dígale que escriba su documento o use el botón de cámara.',
+  'Pídale que elija una opción de la lista.',
+  'Pídale que ingrese o escanee el dato solicitado.',
+  'Dígale que verifique el número con ayuda de la cámara.',
   'Pídale que revise sus datos y toque el botón verde.'
 ];
 const ESTADO = { 'Completado': ['check_circle', 'p-ok'], 'Pendiente': ['schedule', 'p-pe'], 'Falló': ['error', 'p-er'] };
@@ -117,16 +136,16 @@ function htmlPermisos() {
 const sinAcceso = () => `<div class="c"><span class="ico-xl material-symbols-rounded" aria-hidden="true">lock</span><h3>Ya no tienes acceso</h3><p>Carmen quitó el permiso para consultar su información.</p><p class="warn">Sin permiso no recibes avisos. Pídele un nuevo código de vinculación.</p></div>`;
 
 /* =========================================================
-   CÓMO FUNCIONA · Demo con subtítulos (HU44)
+   DEMO EN VIDEO (HU44)
    ========================================================= */
 const CAP = [
   [0, 'waving_hand', 'Hola, te acompañamos paso a paso.'],
-  [10, 'home', 'En la pantalla de inicio, toca “Solicitar una cita”.'],
-  [25, 'local_hospital', 'Elige el centro de salud que te queda más cerca.'],
-  [40, 'calendar_month', 'Elige la fecha en el calendario.'],
-  [55, 'badge', 'Escanea tu DNI o escríbelo sin miedo a equivocarte.'],
+  [10, 'home', 'En la pantalla de inicio, elige cualquiera de los 4 trámites.'],
+  [25, 'local_hospital', 'Elige tu centro o servicio con botones grandes.'],
+  [40, 'calendar_month', 'Selecciona la fecha o escanea tu recibo con la cámara.'],
+  [55, 'badge', 'El asistente contextual te explica cada paso en lenguaje claro.'],
   [70, 'volume_up', 'Toca “Escuchar” o usa tu voz para avanzar.'],
-  [85, 'check_circle', 'Revisa el resumen y confirma. La decisión es siempre tuya.'],
+  [85, 'check_circle', 'Revisa el resumen hablado y confirma. La decisión es siempre tuya.'],
   [100, 'group', 'Tu familia puede acompañarte con QR, solo si tú lo permites.']
 ];
 const DUR = 108;
@@ -162,19 +181,19 @@ if (Q('#pp')) {
 }
 
 /* =========================================================
-   PRUEBA LA APP · CON MEJORAS HUMAN-AI INTERACTION (SEMANA 14)
+   PRUEBA LA APP · TODAS LAS OPCIONES FUNCIONALES
    ========================================================= */
 let mode = 'adulto', view = 'home', quit = false, said = '', enfocar = false;
 
 const banner = () => mode === 'personal' ? `<div class="ban">${I('visibility')} MODO ASISTIDO</div>` : '';
 
-/* Mejora 1 (Juaquin Aldazabal): Recomendaciones personalizadas con transparencia HAI */
 function vHome() {
   const orden = ACC.slice().sort((a, b) => (S.uses[b[1]] || 0) - (S.uses[a[1]] || 0));
   said = '¿Qué necesitas hacer? Elige un trámite.';
+  const pendTitulo = FLOWS[S.flow]?.titulo || 'Solicitar una cita';
   return `<p class="hi">Buenos días, Carmen</p><h3 tabindex="-1">¿Qué necesitas hacer?</h3>`
     + `<p><small>${I('auto_awesome')} Ordenado según tus trámites frecuentes (tú tienes el control).</small></p>`
-    + (S.step > 0 ? `<div class="pend"><b>${I('schedule')} Solicitar una cita</b><p>Quedaste en el paso ${S.step} de 4</p><button class="btn" data-a="resume">${I('arrow_forward')} Continuar donde lo dejé</button></div>` : '')
+    + (S.step > 0 ? `<div class="pend"><b>${I('schedule')} ${pendTitulo}</b><p>Quedaste en el paso ${S.step} de 4</p><button class="btn" data-a="resume">${I('arrow_forward')} Continuar donde lo dejé</button></div>` : '')
     + `<div class="acc">` + orden.map(a => {
       const usos = S.uses[a[1]] || 0;
       const motivo = usos > 0 ? `Usado ${usos} ${usos === 1 ? 'vez' : 'veces'}` : a[2];
@@ -182,31 +201,37 @@ function vHome() {
     }).join('') + '</div>';
 }
 
-/* Mejoras 3, 4, 5 y 6: Voz multimodal + Asistente contextual + OCR + Deshacer */
 function vPaso(n) {
-  const s = STEPS[n - 1], d = S.data;
+  const fl = FLOWS[S.flow] || FLOWS.cita;
+  const s = fl.steps[n - 1], d = S.data;
   said = s.t + '. ' + (s.ex || '');
   let f = '';
   if (s.o) {
-    f = `<div class="opts" role="group" aria-label="${s.t}">` + s.o.map(o => `<button class="opt" data-a="opt" data-v="${o}" aria-pressed="${d.centro === o}">${I('local_hospital')} ${o}</button>`).join('') + '</div>';
+    const valActual = d[s.k];
+    f = `<div class="opts" role="group" aria-label="${s.t}">` + s.o.map(o => `<button class="opt" data-a="opt" data-k="${s.k}" data-v="${o}" aria-pressed="${valActual === o}">${I(S.flow === 'recibo' ? 'receipt_long' : 'local_hospital')} ${o}</button>`).join('') + '</div>';
   } else if (s.k === 'fecha') {
     f = `<label for="f">Fecha de la cita</label><input id="f" type="date" min="${isoHoy()}" value="${d.fecha || ''}" aria-describedby="fh err"><small id="fh" class="hint">${s.ex}</small>`;
+  } else if (s.k === 'monto') {
+    if (!d.monto) d.monto = '85.50';
+    f = `<label for="f">Monto a pagar (S/)</label>
+         <input id="f" type="number" step="0.10" value="${d.monto}" aria-describedby="fh err">
+         <small id="fh" class="hint">${s.ex}</small>
+         <button class="btn2" data-a="clr">${I('backspace')} Borrar monto</button>`;
   } else {
-    /* Mejora 5 (Daniel Bernuy): Reconocimiento óptico OCR para DNI */
+    const eti = S.flow === 'recibo' ? 'Escanear recibo con cámara (IA)' : 'Escanear DNI con cámara (IA)';
     f = `<div class="ocr-box">
-          <button type="button" class="btn2" data-a="ocr" style="width:100%;margin:0">${I('photo_camera')} Escanear DNI con cámara (IA)</button>
+          <button type="button" class="btn2" data-a="ocr" style="width:100%;margin:0">${I('photo_camera')} ${eti}</button>
           <div id="ocr-res" hidden></div>
          </div>
-         <label for="f">Número de documento (o corrígelo aquí)</label>
+         <label for="f">Número de 8 dígitos (o corrígelo aquí)</label>
          <input id="f" inputmode="numeric" maxlength="8" autocomplete="off" value="${d.doc || ''}" aria-describedby="fh err">
          <small id="fh" class="hint">${s.ex}</small>
          <small class="hint">Llevas <b id="cnt">${(d.doc || '').length} de 8</b> números</small>
          <button class="btn2" data-a="clr">${I('backspace')} Borrar dato</button>`;
   }
 
-  return `<p class="st">Paso ${n} de 4</p><div class="bar" role="progressbar" aria-label="Avance del trámite" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${n}"><i style="width:${n * 25}%"></i></div>`
+  return `<p class="st">Paso ${n} de 4 · ${fl.titulo}</p><div class="bar" role="progressbar" aria-label="Avance del trámite" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${n}"><i style="width:${n * 25}%"></i></div>`
     + `<h3 id="titulo-paso" tabindex="-1">${s.t}</h3>`
-    /* Mejora 3 (Andy Ashcalla): Barra multimodal de voz + comandos de voz + onda visual */
     + `<div class="vz">
         <button class="btn2" data-a="say">${I('volume_up')}Escuchar</button>
         <button class="btn2" data-a="mic">${I('mic')}Hablar</button>
@@ -215,7 +240,6 @@ function vPaso(n) {
     + `<div id="voz-onda" class="voz-ondas" hidden><span class="ondas-bars"><i></i><i></i><i></i></span><span id="voz-txt">Leyendo instrucción en voz alta...</span></div>`
     + f
     + `<p id="err" class="err" role="alert" hidden></p><div id="undo"></div>`
-    /* Mejora 4 (Carlos Caceres): Asistente Conversacional Contextual */
     + `<div class="hai-bot" role="region" aria-label="Ayudante ConectaSenior">
         <div class="hai-bot-head">${I('smart_toy')} Ayudante ConectaSenior <small>(Guía automática)</small></div>
         <div class="hai-chips">
@@ -229,23 +253,61 @@ function vPaso(n) {
 }
 
 function vResumen() {
-  const d = S.data;
-  const r = [['Centro', d.centro], ['Fecha', fmtISO(d.fecha)], ['Documento', d.doc]];
+  const d = S.data, esRecibo = S.flow === 'recibo';
+  const r = esRecibo
+    ? [['Servicio', d.servicio], ['Suministro', d.doc], ['Monto a pagar', 'S/ ' + (d.monto || '85.50')]]
+    : [['Centro', d.centro], ['Fecha', fmtISO(d.fecha)], ['Documento', d.doc]];
+  const detalleVoz = esRecibo
+    ? `Vas a pagar ${d.servicio}, suministro ${d.doc}, por un monto de ${d.monto} soles.`
+    : `Vas a confirmar tu cita en ${d.centro} para el ${fmtISO(d.fecha)}.`;
   said = 'Revisa la información y confirma.';
   return `<p class="st">Paso 4 de 4</p><div class="bar" role="progressbar" aria-label="Avance del trámite" aria-valuemin="0" aria-valuemax="4" aria-valuenow="4"><i style="width:100%"></i></div><h3 tabindex="-1">Revisa la información</h3>`
     + r.map((x, i) => `<div class="row"><b>${x[0]}:</b> ${esc(x[1] || '—')}<br><button class="btn2" data-a="fix" data-n="${i + 1}">${I('edit')} Corregir</button></div>`).join('')
-    + `<div class="nav2"><button class="btn2" data-a="back">${I('arrow_back')} Volver</button><button class="btn" data-a="send">${I('send')} Enviar</button></div>`
-    /* Mejora 6 (Nicolas Mancilla): Doble confirmación con lectura en voz alta */
-    + (view === 'confirm' ? `<div class="ov" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t" tabindex="-1">¿Enviar tu solicitud?</h3><p>${esc(d.centro)}, ${fmtISO(d.fecha)}</p><p><small>${I('volume_up')} Leyendo resumen en voz alta. Nada se envía hasta que confirmes.</small></p><button class="btn" data-a="yes">${I('check_circle')} Sí, confirmar</button><button class="btn2" data-a="no">${I('arrow_back')} No, volver</button></div>` : '');
+    + `<div class="nav2"><button class="btn2" data-a="back">${I('arrow_back')} Volver</button><button class="btn" data-a="send">${I('send')} ${esRecibo ? 'Pagar ahora' : 'Enviar'}</button></div>`
+    + (view === 'confirm' ? `<div class="ov" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t" tabindex="-1">¿Confirmas esta operación?</h3><p>${detalleVoz}</p><p><small>${I('volume_up')} Leyendo resumen en voz alta. Nada se procesa hasta que confirmes.</small></p><button class="btn" data-a="yes">${I('check_circle')} Sí, confirmar</button><button class="btn2" data-a="no">${I('arrow_back')} No, volver</button></div>` : '');
 }
 
 function vListo() {
   const x = S.last;
   said = 'Trámite completado. Tu número de constancia es ' + x.c;
-  return `<div class="c"><span class="ico-xl material-symbols-rounded" aria-hidden="true" style="color:var(--verde)">check_circle</span><h3 tabindex="-1">Trámite completado</h3><p>Tu cita se solicitó correctamente.</p></div>`
+  return `<div class="c"><span class="ico-xl material-symbols-rounded" aria-hidden="true" style="color:var(--verde)">check_circle</span><h3 tabindex="-1">${x.titulo || 'Trámite completado'}</h3><p>${x.detalle || 'Tu solicitud se procesó correctamente.'}</p></div>`
     + (x.as ? `<p class="c"><span class="pill">${I('visibility')} Completado con acompañamiento</span></p>` : '')
     + `<div class="cons">Número de constancia<br><b>${x.c}</b></div>`
     + `<button class="btn2" data-a="keep" style="width:100%">${I('download')} Guardar constancia</button><button class="btn" data-a="home">${I('home')} Volver al inicio</button>`;
+}
+
+/* Vista 3: Consultar mi cita (Funcional) */
+function vMisCitas() {
+  const citas = [
+    { centro: 'Centro Norte', fecha: fechaRel(4), hora: '09:30 AM', cod: 'CS-4812-9011' },
+    ...S.done.filter(x => x.n === 'Solicitar una cita').map((c, idx) => ({ centro: c.centro || 'Centro Lima', fecha: c.d, hora: '10:15 AM', cod: 'CS-7721-330' + idx }))
+  ];
+  said = `Tienes ${citas.length} citas médicas programadas.`;
+  return `<p class="hi">Tus reservas activas</p><h3 id="titulo-paso" tabindex="-1">Consultar mi cita</h3>`
+    + `<div class="vz"><button class="btn2" data-a="say">${I('volume_up')}Escuchar</button><button class="btn2" data-a="mic">${I('mic')}Hablar</button><button class="btn2" data-a="stop">${I('stop')}Detener</button></div>`
+    + `<div id="voz-onda" class="voz-ondas" hidden><span class="ondas-bars"><i></i><i></i><i></i></span><span id="voz-txt">Leyendo tus citas...</span></div>`
+    + citas.map(c => `<div class="row">
+        <span class="pill p-ok">${I('check_circle')} Confirmada</span>
+        <p style="margin:6px 0 2px"><b>${esc(c.centro)}</b></p>
+        <small>${I('event')} ${esc(c.fecha)} · ${c.hora}<br>Constancia: <b>${c.cod}</b></small>
+      </div>`).join('')
+    + `<div class="hai-bot"><div class="hai-bot-head">${I('smart_toy')} Ayudante ConectaSenior</div><div class="hai-bot-msg">Recuerda llevar tu DNI físico 15 minutos antes de tu cita.</div></div>`
+    + `<button class="btn" data-a="home" style="margin-top:16px">${I('home')} Volver al inicio</button>`;
+}
+
+/* Vista 4: Consultar mi pensión (Funcional) */
+function vPension() {
+  said = 'Tu pensión de 650 soles está disponible para cobro desde hoy en el Banco de la Nación.';
+  return `<p class="hi">Cronograma ONP / Pensión 65</p><h3 id="titulo-paso" tabindex="-1">Consultar mi pensión</h3>`
+    + `<div class="vz"><button class="btn2" data-a="say">${I('volume_up')}Escuchar</button><button class="btn2" data-a="mic">${I('mic')}Hablar</button><button class="btn2" data-a="stop">${I('stop')}Detener</button></div>`
+    + `<div id="voz-onda" class="voz-ondas" hidden><span class="ondas-bars"><i></i><i></i><i></i></span><span id="voz-txt">Leyendo información de pensión...</span></div>`
+    + `<div class="row" style="border-left:5px solid var(--verde)">
+        <span class="pill p-ok">${I('payments')} Abono disponible</span>
+        <p style="font-size:26px;font-weight:700;color:var(--verde);margin:8px 0">S/ 650.00</p>
+        <small><b>Fecha de abono:</b> ${fechaRel(-1)}<br><b>Entidad:</b> Banco de la Nación (Cuenta N° ****4821)</small>
+      </div>`
+    + `<div class="hai-bot"><div class="hai-bot-head">${I('smart_toy')} Ayudante ConectaSenior</div><div class="hai-bot-msg">Tu dinero ya está en tu cuenta. No necesitas retirarlo todo el mismo día y nunca compartas tu clave secreta.</div></div>`
+    + `<button class="btn" data-a="home" style="margin-top:16px">${I('home')} Volver al inicio</button>`;
 }
 
 function vFamiliar() {
@@ -258,18 +320,19 @@ function vFamiliar() {
 function vFlujo() {
   if (view === 'home') return vHome();
   if (view === 'done') return vListo();
+  if (view === 'miscitas') return vMisCitas();
+  if (view === 'pension') return vPension();
   return S.step === 4 ? vResumen() : vPaso(S.step);
 }
 
 function info() {
   let h;
-  if (mode === 'adulto') h = `<h3>Qué puedes probar (Mejoras HAI)</h3><ul class="ck"><li>${I('auto_awesome')} Recomendaciones transparentes</li><li>${I('mic')} Voz multimodal y comandos</li><li>${I('smart_toy')} Ayudante contextual en cada paso</li><li>${I('photo_camera')} Escaneo OCR de documento</li><li>${I('undo')} Deshacer y doble confirmación</li></ul><p><small>Tu avance se guarda solo en este navegador.</small></p>`;
+  if (mode === 'adulto') h = `<h3>Qué puedes probar (4 Trámites Activos)</h3><ul class="ck"><li>${I('calendar_month')} Solicitar una cita médica</li><li>${I('receipt_long')} Pagar un recibo (Luz/Agua)</li><li>${I('local_hospital')} Consultar tus citas activas</li><li>${I('payments')} Consultar tu pensión y abonos</li><li>${I('smart_toy')} Voz, OCR y Ayudante IA en todo</li></ul><p><small>Tu avance se guarda solo en este navegador.</small></p>`;
   else if (mode === 'familiar') h = '<h3>Lo que puedes ver</h3>' + htmlPermisos() + `<a class="btn2" href="portal.html">${I('login')} Ir al portal del familiar</a>`;
   else h = `<h3>Asistencia respetuosa</h3><ul class="ck"><li>${I('check_circle')} Usa frases claras y breves</li><li>${I('check_circle')} Señala el siguiente paso</li><li>${I('check_circle')} Deja que él toque la pantalla</li><li>${I('check_circle')} La confirmación final es suya</li></ul>`;
   Q('#info').innerHTML = h;
 }
 
-/* Mejora 2 (Carlos Cubas): Vinculación familiar multimodal con QR visual + guía sincronizada */
 function panel() {
   const p = Q('#panel');
   Q('#demo-grid').classList.toggle('dos', mode === 'adulto');
@@ -284,7 +347,7 @@ function panel() {
       + (S.code ? `<div class="qr-link-box"><img src="images/qr.svg" alt="QR de vinculación" width="96" height="96"><br><small>Código de 6 dígitos:</small><br><b id="code" style="font-size:26px;letter-spacing:3px;color:var(--verde)">${S.code}</b></div>` : `<b id="code" style="font-size:24px;letter-spacing:2px"></b>`)
       + `<label for="cin">Paso 2: Escribe aquí los 6 números</label><input id="cin" inputmode="numeric" maxlength="6" placeholder="Ej: ${S.code || '482915'}" autocomplete="off" aria-describedby="cmsg"><button class="btn" data-a="link">${I('link')} Aprobar vinculación</button><p id="cmsg" role="status"></p>`;
   } else {
-    const frase = view === 'done' ? 'Felicítelo: el trámite fue suyo.' : view === 'home' ? 'Pídale que toque “Solicitar una cita”.' : FRASES[Math.min(S.step || 1, 4) - 1];
+    const frase = view === 'done' ? 'Felicítelo: el trámite fue suyo.' : view === 'home' ? 'Pídale que toque el trámite que necesita.' : FRASES[Math.min(S.step || 1, 4) - 1];
     p.innerHTML = `<h3>Frase guía sugerida</h3><p class="note2"><b>“${frase}”</b></p>`
       + `<button class="btn2" data-a="snext">${I('arrow_forward')} Avanzar como personal</button><button class="btn2" data-a="sconf">${I('check_circle')} Confirmar como personal</button>`
       + `<p id="smsg" class="warn" role="status" hidden></p><p class="note2">${I('info')} Solo el adulto mayor puede avanzar y confirmar.</p>`
@@ -302,13 +365,15 @@ function render() {
 function go(n) { S.step = n; save(); enfocar = true; render(); }
 
 function revisar(n) {
-  const d = S.data;
-  if (n === 1) return d.centro ? '' : 'Elige un centro de salud para continuar.';
-  if (n === 2) { if (!d.fecha) return 'Falta la fecha. Toca el campo y elige un día.'; if (d.fecha < isoHoy()) return 'Esa fecha ya pasó. Elige un día desde hoy.'; return ''; }
-  return /^\d{8}$/.test(d.doc || '') ? '' : `Tu documento debe tener 8 números. Escribiste ${(d.doc || '').length}. Ejemplo: 12345678.`;
+  const fl = FLOWS[S.flow] || FLOWS.cita;
+  const s = fl.steps[n - 1], d = S.data;
+  if (s.k === 'centro') return d.centro ? '' : 'Elige un centro de salud para continuar.';
+  if (s.k === 'servicio') return d.servicio ? '' : 'Elige el servicio que deseas pagar.';
+  if (s.k === 'fecha') { if (!d.fecha) return 'Falta la fecha. Toca el campo y elige un día.'; if (d.fecha < isoHoy()) return 'Esa fecha ya pasó. Elige un día desde hoy.'; return ''; }
+  if (s.k === 'monto') return Number(d.monto) > 0 ? '' : 'Ingresa un monto válido mayor a cero.';
+  return /^\d{8}$/.test(d.doc || '') ? '' : `El número debe tener 8 dígitos. Escribiste ${(d.doc || '').length}. Ejemplo: 12345678.`;
 }
 
-/* Mejora 3 (Andy Ashcalla): Síntesis de voz con feedback visual sincronizado */
 function hablar(texto, parar) {
   const onda = Q('#voz-onda'), tit = Q('#titulo-paso');
   if (!('speechSynthesis' in window)) { say('Tu navegador no tiene voz disponible.'); return; }
@@ -324,7 +389,6 @@ function hablar(texto, parar) {
   speechSynthesis.speak(u);
 }
 
-/* Mejora 3: Reconocimiento de comandos de voz */
 function escucharComando() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   const onda = Q('#voz-onda'), vtxt = Q('#voz-txt');
@@ -341,7 +405,7 @@ function escucharComando() {
     if (onda) onda.hidden = true;
     if (cmd.includes('repetir')) hablar(said);
     else if (cmd.includes('siguiente')) Q('[data-a="next"]')?.click();
-    else if (cmd.includes('volver')) Q('[data-a="back"]')?.click();
+    else if (cmd.includes('volver')) Q('[data-a="back"]')?.click() || Q('[data-a="home"]')?.click();
     else { say('No entendí el comando. Intenta decir Siguiente, Repetir o Volver.'); alert(`Escuché "${cmd}". Di: Siguiente, Repetir o Volver.`); }
   };
   rec.onerror = () => { if (onda) onda.hidden = true; };
@@ -350,7 +414,7 @@ function escucharComando() {
 
 function guardarConstancia() {
   const x = S.last;
-  const txt = `ConectaSenior · Constancia de trámite\n\nTrámite: Solicitar una cita\nCentro: ${x.centro}\nFecha de la cita: ${x.fecha}\nNúmero de constancia: ${x.c}\n` + (x.as ? 'Completado con acompañamiento del personal del centro\n' : '');
+  const txt = `ConectaSenior · Constancia de trámite\n\nTrámite: ${x.titulo}\nDetalle: ${x.detalle}\nNúmero de constancia: ${x.c}\n`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
   a.download = `constancia-${x.c}.txt`;
@@ -434,7 +498,6 @@ document.addEventListener('click', e => {
   if (b.tagName === 'A' && b.getAttribute('href') === '#') e.preventDefault();
 
   switch (a) {
-    /* ----- Selector directo de roles desde el inicio (Mejora 1) ----- */
     case 'pickrole': {
       mode = b.dataset.m; view = 'home'; quit = false;
       QA('#prueba [role=tab]').forEach(x => { const s = x.dataset.m === mode; x.setAttribute('aria-selected', s); x.tabIndex = s ? 0 : -1; });
@@ -444,26 +507,37 @@ document.addEventListener('click', e => {
       break;
     }
 
-    /* ----- Demo de roles ----- */
     case 'tab':
       mode = b.dataset.m; view = 'home'; quit = false;
       QA('#prueba [role=tab]').forEach(x => { const s = x === b; x.setAttribute('aria-selected', s); x.tabIndex = s ? 0 : -1; });
       Q('#demo-grid').setAttribute('aria-labelledby', b.id);
       render(); say('Rol: ' + b.textContent.trim()); break;
-    case 'acc':
-      S.uses[b.dataset.n] = (S.uses[b.dataset.n] || 0) + 1; save();
-      if (b.dataset.n === 'Solicitar una cita') { view = 'step'; go(S.step || 1); }
-      else { render(); say('Preferencia registrada. Prueba “Solicitar una cita” para ver el flujo completo.'); }
+
+    case 'acc': {
+      const nom = b.dataset.n;
+      S.uses[nom] = (S.uses[nom] || 0) + 1;
+      if (nom === 'Solicitar una cita') {
+        if (S.flow !== 'cita') { S.flow = 'cita'; S.step = 1; S.data = {}; }
+        save(); view = 'step'; go(S.step || 1);
+      } else if (nom === 'Pagar un recibo') {
+        if (S.flow !== 'recibo') { S.flow = 'recibo'; S.step = 1; S.data = {}; }
+        save(); view = 'step'; go(S.step || 1);
+      } else if (nom === 'Consultar mi cita') {
+        save(); view = 'miscitas'; enfocar = true; render();
+      } else if (nom === 'Consultar mi pensión') {
+        save(); view = 'pension'; enfocar = true; render();
+      }
       break;
+    }
     case 'resume': view = 'step'; go(S.step); break;
-    case 'opt': S.data.centro = b.dataset.v; save(); render(); Q(`[data-v="${b.dataset.v}"]`).focus(); break;
+    case 'opt': S.data[b.dataset.k] = b.dataset.v; save(); render(); Q(`[data-v="${b.dataset.v}"]`)?.focus(); break;
     case 'say': hablar(said); break;
     case 'mic': escucharComando(); break;
     case 'stop': hablar('', true); break;
 
-    /* ----- Asistente Conversacional Contextual (Mejora 4) ----- */
     case 'bot': {
-      const s = STEPS[S.step - 1], out = Q('#bot-out');
+      const fl = FLOWS[S.flow] || FLOWS.cita;
+      const s = fl.steps[S.step - 1], out = Q('#bot-out');
       if (!s || !out) break;
       const msg = b.dataset.q === 'ej' ? s.aiEj : s.aiQue;
       out.textContent = msg;
@@ -472,7 +546,6 @@ document.addEventListener('click', e => {
       break;
     }
 
-    /* ----- Escaneo OCR simulado (Mejora 5) ----- */
     case 'ocr': {
       S.prev = S.data.doc || '';
       S.data.doc = '10458921'; save();
@@ -482,20 +555,30 @@ document.addEventListener('click', e => {
       if (res) {
         res.hidden = false;
         res.className = 'ocr-ok';
-        res.innerHTML = '✅ DNI leído con 97 % de precisión: <b>10458921</b>. Revísalo abajo.';
+        res.innerHTML = '✅ Leído con 97 % de precisión: <b>10458921</b>. Revísalo abajo.';
       }
-      Q('#undo').innerHTML = `<div class="undo"><span>DNI autocompletado por cámara</span><button class="btn2" data-a="undo">${I('undo')} Deshacer</button></div>`;
-      say('Documento 10458921 completado automáticamente.');
+      Q('#undo').innerHTML = `<div class="undo"><span>Número autocompletado por cámara</span><button class="btn2" data-a="undo">${I('undo')} Deshacer</button></div>`;
+      say('Número 10458921 completado automáticamente.');
       break;
     }
 
-    case 'clr':
-      S.prev = S.data.doc; S.data.doc = ''; save(); Q('#f').value = ''; Q('#cnt').textContent = '0 de 8';
+    case 'clr': {
+      const fl = FLOWS[S.flow] || FLOWS.cita;
+      const k = fl.steps[S.step - 1].k;
+      S.prev = S.data[k]; S.data[k] = ''; save();
+      if (Q('#f')) Q('#f').value = '';
+      if (Q('#cnt')) Q('#cnt').textContent = '0 de 8';
       Q('#undo').innerHTML = `<div class="undo"><span>Dato borrado</span><button class="btn2" data-a="undo">${I('undo')} Deshacer</button></div>`;
       say('Dato borrado. Puedes deshacer.'); break;
-    case 'undo':
-      S.data.doc = S.prev || ''; save(); Q('#f').value = S.data.doc; Q('#cnt').textContent = S.data.doc.length + ' de 8';
-      Q('#undo').innerHTML = ''; Q('#f').focus(); say('Dato restaurado.'); break;
+    }
+    case 'undo': {
+      const fl = FLOWS[S.flow] || FLOWS.cita;
+      const k = fl.steps[S.step - 1].k;
+      S.data[k] = S.prev || ''; save();
+      if (Q('#f')) Q('#f').value = S.data[k];
+      if (Q('#cnt')) Q('#cnt').textContent = String(S.data[k]).length + ' de 8';
+      Q('#undo').innerHTML = ''; Q('#f')?.focus(); say('Dato restaurado.'); break;
+    }
     case 'back':
       if (view === 'step' && S.step > 1) go(S.step - 1); else { view = 'home'; enfocar = true; render(); }
       break;
@@ -509,17 +592,29 @@ document.addEventListener('click', e => {
       break;
     }
     case 'fix': view = 'step'; go(+b.dataset.n); break;
-    case 'send':
+    case 'send': {
       view = 'confirm'; enfocar = true; render();
-      hablar(`Vas a confirmar tu cita en ${S.data.centro} para el ${fmtISO(S.data.fecha)}. Presiona Sí, confirmar para terminar.`);
+      const d = S.data;
+      const voz = S.flow === 'recibo'
+        ? `Vas a pagar ${d.servicio} por ${d.monto} soles. Presiona Sí, confirmar para terminar.`
+        : `Vas a confirmar tu cita en ${d.centro} para el ${fmtISO(d.fecha)}. Presiona Sí, confirmar para terminar.`;
+      hablar(voz);
       break;
+    }
     case 'no': hablar('', true); view = 'step'; enfocar = true; render(); break;
     case 'yes': {
       hablar('', true);
-      const d = S.data, c = 'CS-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000), h = new Date().toTimeString().slice(0, 5);
-      S.last = { c, as: mode === 'personal', centro: d.centro, fecha: fmtISO(d.fecha) };
-      S.done.push({ n: 'Solicitar una cita', d: fmtISO(d.fecha) });
-      if (S.perms.n && S.access) S.notes.push(`Carmen completó “Solicitar una cita” hoy a las ${h}.`);
+      const d = S.data, esRecibo = S.flow === 'recibo';
+      const c = 'CS-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000), h = new Date().toTimeString().slice(0, 5);
+      if (esRecibo) {
+        S.last = { c, as: mode === 'personal', titulo: 'Pago realizado', detalle: `${d.servicio} · S/ ${d.monto}` };
+        S.done.push({ n: `Pago: ${d.servicio}`, d: `Hoy (S/ ${d.monto})` });
+        if (S.perms.n && S.access) S.notes.push(`Carmen pagó “${d.servicio}” (S/ ${d.monto}) hoy a las ${h}.`);
+      } else {
+        S.last = { c, as: mode === 'personal', titulo: 'Cita solicitada', detalle: `${d.centro} · ${fmtISO(d.fecha)}` };
+        S.done.push({ n: 'Solicitar una cita', centro: d.centro, d: fmtISO(d.fecha) });
+        if (S.perms.n && S.access) S.notes.push(`Carmen completó “Solicitar una cita” hoy a las ${h}.`);
+      }
       S.step = 0; S.data = {}; save(); view = 'done'; enfocar = true; render();
       say('Trámite completado.' + (S.perms.n && S.access ? ' Se envió un aviso a su familiar.' : ''));
       break;
@@ -550,7 +645,6 @@ document.addEventListener('click', e => {
       render(); say('Saliste del modo asistido.'); break;
     }
 
-    /* ----- Descargar app (HU47) ----- */
     case 'scan': {
       const u = navigator.userAgent, o = Q('#os');
       const tienda = /android/i.test(u) ? 'play' : /iphone|ipad|ipod/i.test(u) ? 'apple' : '';
@@ -566,7 +660,6 @@ document.addEventListener('click', e => {
       say(o.textContent); break;
     }
 
-    /* ----- Portal ----- */
     case 'auth': authView = b.dataset.v; renderPortal(b.getAttribute('role') === 'tab' ? '#t-' + authView : (authView === 'login' ? '#l-m' : '#s-n')); break;
     case 'ver': {
       const f = Q('#' + b.dataset.for), ver = f.type === 'password';
@@ -582,8 +675,9 @@ document.addEventListener('click', e => {
 
 document.addEventListener('input', e => {
   if (e.target.id === 'f' && Q('#phone')) {
-    const s = STEPS[S.step - 1];
-    if (s.k === 'doc') { e.target.value = e.target.value.replace(/\D/g, ''); Q('#cnt').textContent = e.target.value.length + ' de 8'; }
+    const fl = FLOWS[S.flow] || FLOWS.cita;
+    const s = fl.steps[S.step - 1];
+    if (s.k === 'doc') { e.target.value = e.target.value.replace(/\D/g, ''); if (Q('#cnt')) Q('#cnt').textContent = e.target.value.length + ' de 8'; }
     S.data[s.k] = e.target.value; save();
     e.target.removeAttribute('aria-invalid'); Q('#err').hidden = true;
   }
